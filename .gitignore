@@ -2,3 +2,8 @@
 */app_id.js
 *.zip
 */node_modules/
+*/package.json
+*/ability_names.txt
+*/hero_names.txt
+*/ability_details.js
+*/hero_abilities.js
