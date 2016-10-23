@@ -1,6 +1,8 @@
 "use strict";
 
 var APP_ID = require("./app_id");
+var heroNamePermutations = require("./hero_name_permutations");
+var abilityNamePermutations = require("./ability_name_permutations");
 var heroAbilities = require("./hero_abilities");
 var abilityDetails = require("./ability_details");
 var AlexaSkill = require("./AlexaSkill");
@@ -98,7 +100,7 @@ function formatCardTitleName(titleName) {
  */
 
 function getWelcomeResponse(response) {
-    var speechText = "Welcome to Dota2 Abilities. You can ask a question like, what are Veneful Spirit's abilities? What is the cooldown for Netherswap? or what are the details of Magic Missile ... Now, what can I help you with.";
+    var speechText = "Welcome to Dota2 Abilities. You can ask a question like, what are Vengeful Spirit's abilities? What is the cooldown for Netherswap? or tell me the description of Magic Missile ... Now, what can I help you with.";
     // If the user either does not reply to the welcome message or says something that is not
     // understood, they will be prompted again with this text.
     var repromptText = "For instructions on what you can say, please say help me.";
@@ -110,21 +112,30 @@ function getWelcomeResponse(response) {
  */
 function handleHeroAbilitiesRequest(intent, session, response) {
     var itemSlot = intent.slots.Hero;
-    var itemName;
-    console.log(" Item name = " + itemSlot.value)
 
-    if (itemSlot && itemSlot.value){
-        itemName = itemSlot.value.toLowerCase().replace(/'s$/, '');
-    }
-
-    var formattedItemName = formatCardTitleName(itemName);
-    var cardTitle = "Abilities: " + formattedItemName;
+    var heroName;
+    var formattedHeroName;
+    var cardTitle;
     var abilities;
     var speechOutput;
     var repromptOutput;
+    console.log("Hero item name = " + itemSlot.value)
 
-    if(itemName in heroAbilities) {
-      abilities = heroAbilities[itemName];
+    if (itemSlot && itemSlot.value){
+        var input = itemSlot.value.toLowerCase().replace(/'s$|s$/, "");
+        console.log("Normalized hero name = " + input);
+        if(input in heroNamePermutations) {
+          heroName = heroNamePermutations[input];
+        } else {
+          heroName = itemSlot.value.toLowerCase().replace(/'s$/, "");
+        }
+        formattedHeroName = formatCardTitleName(heroName);
+        cardTitle = "Abilities: " + formattedHeroName;
+        console.log("Hero name = " + heroName);
+    }
+
+    if(heroName in heroAbilities) {
+      abilities = heroAbilities[heroName];
     }
 
     if (abilities) {
@@ -132,10 +143,10 @@ function handleHeroAbilitiesRequest(intent, session, response) {
         response.tellWithCard(speechOutput, cardTitle, speechOutput);
     } else {
         var speech;
-        if (itemName) {
-            speech = "I'm sorry, I do not know about " + formattedItemName + ". What else can I help with?";
+        if (heroName) {
+            speech = "I'm sorry, I could not find abilities for the hero " + formattedHeroName + ". What else can I help with?";
         } else {
-            speech = "I'm sorry, I currently do not know that hero. What else can I help with?";
+            speech = "I'm sorry, I currently do not know abilities for that hero. What else can I help with?";
         }
         speechOutput = {
             speech: speech,
@@ -154,24 +165,30 @@ function handleHeroAbilitiesRequest(intent, session, response) {
  */
  function handleAbilityDescriptionRequest(intent, session, response) {
      var itemSlot = intent.slots.Ability;
-     var itemName;
-     console.log("Item slot = " + itemSlot + " Item name = " + itemSlot.value);
+
+     var abilityName;
+     var formattedAbilityName;
+     var cardTitle;
+     var description;
+     var speechOutput;
+     var repromptOutput;
+     console.log("Ability item name = " + itemSlot.value);
 
      if (itemSlot && itemSlot.value){
-         itemName = itemSlot.value.toLowerCase().replace(/'s$/, '');
-         if(itemName == "slam") {
-           itemName = "echo slam"
+         var input = itemSlot.value.toLowerCase().replace(/'s$|s$/, "");
+         console.log("Normalized ability name = " + input);
+         if(input in abilityNamePermutations) {
+           abilityName = abilityNamePermutations[input];
+         } else {
+           abilityName = itemSlot.value.toLowerCase().replace(/'s$/, "");
          }
+         formattedAbilityName = formatCardTitleName(abilityName);
+         cardTitle = "Description: " + formattedAbilityName;
+         console.log("Ability name = " + abilityName);
      }
 
-    var formattedItemName = formatCardTitleName(itemName);
-    var cardTitle = "Description: " + formattedItemName;
-    var description;
-    var speechOutput;
-    var repromptOutput;
-
-    if(itemName in abilityDetails) {
-       description = abilityDetails[itemName]["description"]
+    if(abilityName in abilityDetails) {
+       description = abilityDetails[abilityName]["description"]
     }
 
     if (description) {
@@ -179,10 +196,10 @@ function handleHeroAbilitiesRequest(intent, session, response) {
          response.tellWithCard(speechOutput, cardTitle, speechOutput);
     } else {
         var speech;
-        if (itemName) {
-            speech = "I'm sorry, I do not know about " + formattedItemName + ". What else can I help with?";
+        if (abilityName) {
+            speech = "I'm sorry, I could not find a description for the ability " + formattedAbilityName + ". What else can I help with?";
         } else {
-            speech = "I'm sorry, I currently do not know that ability. What else can I help with?";
+            speech = "I'm sorry, I currently do not know  ability. What else can I help with?";
         }
         speechOutput = {
             speech: speech,
@@ -201,39 +218,45 @@ function handleHeroAbilitiesRequest(intent, session, response) {
  */
  function handleAbilityLoreRequest(intent, session, response) {
      var itemSlot = intent.slots.Ability;
-     var itemName;
-     console.log("Item slot = " + itemSlot + " Item name = " + itemSlot.value);
+
+     var abilityName;
+     var formattedAbilityName;
+     var cardTitle;
+     var lore;
+     var speechOutput;
+     var repromptOutput;
+     console.log("Ability item name = " + itemSlot.value);
 
      if (itemSlot && itemSlot.value){
-         itemName = itemSlot.value.toLowerCase().replace(/'s$/, '');
-         if(itemName == "slam") {
-           itemName = "echo slam"
+         var input = itemSlot.value.toLowerCase().replace(/'s$|s$/, "");
+         console.log("Normalized ability name = " + input);
+         if(input in abilityNamePermutations) {
+           abilityName = abilityNamePermutations[input];
+         } else {
+           abilityName = itemSlot.value.toLowerCase().replace(/'s$/, "");
          }
+         formattedAbilityName = formatCardTitleName(abilityName);
+         cardTitle = "Lore: " + formattedAbilityName;
+         console.log("Ability name = " + abilityName);
      }
 
-    var formattedItemName = formatCardTitleName(itemName);
-    var cardTitle = "Lore: " + formattedItemName;
-    var lore;
-    var speechOutput;
-    var repromptOutput;
-
-    if(itemName in abilityDetails) {
-       lore = abilityDetails[itemName]["lore"]
+    if(abilityName in abilityDetails) {
+       lore = abilityDetails[abilityName]["lore"]
     }
 
     if (lore) {
          if(lore == "") {
-             speechOutput = itemName + " does not have any lore.";
+             speechOutput = abilityName + " does not have any lore.";
          } else {
              speechOutput = lore;
          }
          response.tellWithCard(speechOutput, cardTitle, speechOutput);
     } else {
         var speech;
-        if (itemName) {
-            speech = "I'm sorry, I do not know lore for " + formattedItemName + ". What else can I help with?";
+        if (abilityName) {
+            speech = "I'm sorry, I could not find lore for the ability " + formattedAbilityName + ". What else can I help with?";
         } else {
-            speech = "I'm sorry, I currently do not know that ability. What else can I help with?";
+            speech = "I'm sorry, I currently do not know lore for that ability. What else can I help with?";
         }
         speechOutput = {
             speech: speech,
@@ -252,39 +275,46 @@ function handleHeroAbilitiesRequest(intent, session, response) {
  */
  function handleAbilityNotesRequest(intent, session, response) {
      var itemSlot = intent.slots.Ability;
-     var itemName;
-     console.log("Item slot = " + itemSlot + " Item name = " + itemSlot.value);
+
+     var abilityName;
+     var formattedAbilityName;
+     var cardTitle;
+     var notes;
+     var speechOutput;
+     var repromptOutput;
+
+     console.log("Ability item name = " + itemSlot.value);
 
      if (itemSlot && itemSlot.value){
-         itemName = itemSlot.value.toLowerCase().replace(/'s$/, '');
-         if(itemName == "slam") {
-           itemName = "echo slam"
+         var input = itemSlot.value.toLowerCase().replace(/'s$|s$/, "");
+         console.log("Normalized ability name = " + input);
+         if(input in abilityNamePermutations) {
+           abilityName = abilityNamePermutations[input];
+         } else {
+           abilityName = itemSlot.value.toLowerCase().replace(/'s$/, "");
          }
+         formattedAbilityName = formatCardTitleName(abilityName);
+         cardTitle = "Notes: " + formattedAbilityName;
+         console.log("Ability name = " + abilityName);
      }
 
-    var formattedItemName = formatCardTitleName(itemName);
-    var cardTitle = "Notes: " + formattedItemName;
-    var notes;
-    var speechOutput;
-    var repromptOutput;
-
-    if(itemName in abilityDetails) {
-       notes = abilityDetails[itemName]["notes"]
+    if(abilityName in abilityDetails) {
+       notes = abilityDetails[abilityName]["notes"]
     }
 
     if (notes) {
          if(notes == "") {
-             speechOutput = itemName + " does not have any notes.";
+             speechOutput = abilityName + " does not have any notes.";
          } else {
              speechOutput = notes;
          }
          response.tellWithCard(speechOutput, cardTitle, speechOutput);
     } else {
         var speech;
-        if (itemName) {
-            speech = "I'm sorry, I did not find any notes for " + formattedItemName + ". What else can I help with?";
+        if (abilityName) {
+            speech = "I'm sorry, I could not find any notes for the ability " + formattedAbilityName + ". What else can I help with?";
         } else {
-            speech = "I'm sorry, I currently do not know about that ability. What else can I help with?";
+            speech = "I'm sorry, I currently do not know notes for that ability. What else can I help with?";
         }
         speechOutput = {
             speech: speech,
@@ -303,30 +333,37 @@ function handleHeroAbilitiesRequest(intent, session, response) {
   */
   function handleAbilityCooldownRequest(intent, session, response) {
       var itemSlot = intent.slots.Ability;
-      var itemName;
-      console.log("Item slot = " + itemSlot + " Item name = " + itemSlot.value);
+
+      var abilityName;
+      var formattedAbilityName;
+      var cardTitle;
+      var cooldown;
+      var speechOutput;
+      var cardOutput;
+      var repromptOutput;
+      console.log("Ability item name = " + itemSlot.value);
 
       if (itemSlot && itemSlot.value){
-          itemName = itemSlot.value.toLowerCase().replace(/'s$/, "");
-          if(itemName == "slam") {
-            itemName = "echo slam"
-          }
+         var input = itemSlot.value.toLowerCase().replace(/'s$|s$/, "");
+         console.log("Normalized ability name = " + input);
+         if(input in abilityNamePermutations) {
+           abilityName = abilityNamePermutations[input];
+         } else {
+           abilityName = itemSlot.value.toLowerCase().replace(/'s$/, "");
+         }
+         formattedAbilityName = formatCardTitleName(abilityName);
+         cardTitle = "Cooldown: " + formattedAbilityName;
+         console.log("Ability name = " + abilityName);
       }
 
-     var formattedItemName = formatCardTitleName(itemName);
-     var cardTitle = "Cooldown: " + formattedItemName;
-     var cooldown;
-     var speechOutput;
-     var cardOutput;
-     var repromptOutput;
 
-     if(itemName in abilityDetails) {
-        cooldown = abilityDetails[itemName]["cooldown"]
+     if(abilityName in abilityDetails) {
+        cooldown = abilityDetails[abilityName]["cooldown"]
      }
 
      if (cooldown) {
           if(cooldown.length < 1 || cooldown == "''") {
-              speechOutput = formattedItemName + " does not have a cooldown.";
+              speechOutput = formattedAbilityName + " does not have a cooldown.";
               cardOutput = speechOutput;
           } else {
               cardOutput = cooldown.replace(/\'|\'/g, "") + " seconds"
@@ -335,10 +372,10 @@ function handleHeroAbilitiesRequest(intent, session, response) {
           response.tellWithCard(speechOutput, cardTitle, cardOutput);
      } else {
          var speech;
-         if (itemName) {
-             speech = "I'm sorry, I do not know about the cooldown for " + formattedItemName + ". What else can I help with?";
+         if (abilityName) {
+             speech = "I'm sorry, I could not find the cooldown for the ability " + formattedAbilityName + ". What else can I help with?";
          } else {
-             speech = "I'm sorry, I currently do not know about that ability. What else can I help with?";
+             speech = "I'm sorry, I currently do not know cooldowns for that ability. What else can I help with?";
          }
          speechOutput = {
              speech: speech,

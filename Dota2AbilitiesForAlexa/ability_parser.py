@@ -65,4 +65,5 @@ class AbilityParser:
         processed_string = processed_string.replace('\r\n\r\n', '')
         processed_string = processed_string.replace('\<br />', '')
         processed_string = processed_string.replace('\r', '')
+        processed_string = processed_string.replace('%', '')
         return processed_string.replace('\n', '')

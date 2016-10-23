@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 
 class Dota2SkillBuilder:
@@ -37,8 +38,6 @@ class Dota2SkillBuilder:
         return slot
 
     def add_default_intents(self):
-        self.build_intent('DontKnowIntent', '')
-        self.build_intent('AMAZON.StartOverIntent', '')
         self.build_intent('AMAZON.HelpIntent', '')
         self.build_intent('AMAZON.YesIntent', '')
         self.build_intent('AMAZON.NoIntent', '')
@@ -46,39 +45,54 @@ class Dota2SkillBuilder:
         self.build_intent('AMAZON.CancelIntent', '')
 
     def create_intents_json(self):
-        print('Creating JSON')
-        script_dir = os.path.dirname(__file__)
+        script_dir = os.path.join(os.getcwd(), 'speechAssets')
         file_path = os.path.join(script_dir, 'intents.json')
-        print(str(self.intents))
-        with open(file_path, 'w') as out_file:
+        with open(file_path, 'w+') as out_file:
             json.dump(self.intents, out_file)
 
     def write_files_for_slots(self):
-        script_dir = os.path.dirname(__file__)
+        script_dir = os.path.join(os.getcwd(), 'speechAssets')
+
+        # Used to create initial name and ability permutation dictionaries. Both such dictionaries are now manually
+        # maintained.
+        #
+        # file_path = os.path.join(script_dir, 'hero_name_permutations.json')
+        # with open(file_path, 'w') as out_file:
+        #     hero_name_permutations = {}
+        #     for hero in self.hero_abilities.keys():
+        #         hero_name_permutations[re.sub('s$', '', hero)] = hero
+        #     json.dump(hero_name_permutations, out_file)
+        #     out_file.close()
+
+        # file_path = os.path.join(script_dir, 'ability_name_permutations.json')
+        # with open(file_path, 'w') as out_file:
+        #     ability_name_permutations = {}
+        #     for ability in self.ability_details.keys():
+        #         ability_name_permutations[re.sub('s$|\'s$', '', ability)] = ability
+        #     json.dump(ability_name_permutations, out_file)
+        #     out_file.close()
 
         file_path = os.path.join(script_dir, 'hero_names.txt')
-        with open(file_path, 'w') as out_file:
-            hero_names_str = '\n'.join(self.hero_abilities.keys()) \
-                             + '\n' + '\'s \n'.join(self.hero_abilities.keys()) + '\'s'
+        with open(file_path, 'w+') as out_file:
+            hero_names_str = '\n'.join(self.hero_abilities.keys())
             out_file.write(hero_names_str)
             out_file.close()
 
         file_path = os.path.join(script_dir, 'ability_names.txt')
-        with open(file_path, 'w') as out_file:
-            ability_names_str = '\n'.join(self.ability_details.keys()) \
-                                + '\n' + '\'s \n'.join(self.ability_details.keys()) + '\'s'
+        with open(file_path, 'w+') as out_file:
+            ability_names_str = '\n'.join(self.ability_details.keys())
             out_file.write(ability_names_str)
             out_file.close()
 
     def write_files_for_skill_logic(self):
-        script_dir = os.path.dirname(__file__)
+        script_dir = os.path.join(os.getcwd(), 'src')
 
         file_path = os.path.join(script_dir, 'hero_abilities.js')
-        with open(file_path, 'w') as out_file:
+        with open(file_path, 'w+') as out_file:
             out_file.write('module.exports = ' + str(self.hero_abilities) + ';')
             out_file.close()
 
         file_path = os.path.join(script_dir, 'ability_details.js')
-        with open(file_path, 'w') as out_file:
+        with open(file_path, 'w+') as out_file:
             out_file.write("module.exports = " + str(self.ability_details) + ';')
             out_file.close()
